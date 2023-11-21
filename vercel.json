@@ -19,10 +19,6 @@
             "dest":"dist/index.html"
         },
         {
-            "src":"/(.+)",
-            "dest":"dist/$1"
-        },
-        {
             "src":"/signin",
             "dest":"dist/index.html"
         },
@@ -125,6 +121,10 @@
         {
             "src":"/admin/coupon",
             "dest":"dist/index.html"
+        },
+        {
+            "src":"/(.+)",
+            "dest":"dist/$1"
         }
     ]
 }
