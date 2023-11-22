@@ -14,7 +14,7 @@ const userSchema = new mongoose.Schema({
   
   address: {
     type: String,
-    // required: [true, "Address is required."],
+    required: [true, "Address is required."],
   },
   email: {
     type: String,
@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   password: {
     type: String,
     required: [true, "Password is required."],
-    minlength: [6, "Password must be at least 6 characters long."],
+    minlength: [8, "Password must be at least 8 characters long."],
   },
   confirmPassword: {
     type: String,

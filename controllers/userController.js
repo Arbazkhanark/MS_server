@@ -55,7 +55,62 @@ const transporter=nodemailer.createTransport({
   };
   
   
-  const register = async (req, res) => {
+//   const register = async (req, res) => {
+//     const { name, email, password, confirmPassword, contact, address, gender } = req.body;
+//     const otp = generateOTP(); // Generate OTP
+  
+//     try {
+//       const isEmailAlready = await userModel.findOne({ email });
+//       if (isEmailAlready) {
+//         return res.status(400).send({ success: false, error: "User Already Exist" });
+//       }
+  
+//       const encrypt = await bcrypt.hash(password, 10);
+//       if (password !== confirmPassword) {
+//         return res.status(400).send({ success: false, error: "password and confirm password should be same" });
+//       }
+  
+//       // Send OTP to the user's email (using nodemailer)
+//       const mailOptions = {
+//         from: process.env.SMTP_USER,
+//         to: email,
+//         subject: "OTP Verification",
+//         text: `Your OTP for registration is: ${otp}`
+//       };
+  
+//       transporter.sendMail(mailOptions, async (error, info) => {
+//         if (error) {
+//           console.error(error);
+//           res.status(500).send({ success: false, error: "Internal Server Error" });
+//         } else {
+//           const newUser = new userModel({
+//             name,
+//             email,
+//             password: encrypt,
+//             confirmPassword: encrypt,
+//             address,
+//             gender,
+//             contact,
+//             avatar: {
+//               public_id: "adbjhsbjhdcdc",
+//               url: "cjsdnkjcdsc"
+//             },
+//             otp // Store OTP temporarily
+//           });
+  
+//           await newUser.save();
+//           res.status(200).send({ success: true, user: newUser, otpSent: true });
+//         }
+//       });
+//     } catch (error) {
+//       console.log(error);
+//       res.status(500).send({ success: false, error: error.message });
+//     }
+//   };
+
+
+
+const register = async (req, res) => {
     const { name, email, password, confirmPassword, contact, address, gender } = req.body;
     const otp = generateOTP(); // Generate OTP
   
@@ -67,46 +122,52 @@ const transporter=nodemailer.createTransport({
   
       const encrypt = await bcrypt.hash(password, 10);
       if (password !== confirmPassword) {
-        return res.status(400).send({ success: false, error: "password and confirm password should be same" });
+        return res.status(400).send({ success: false, error: "Password and Confirm Password should be the same" });
       }
   
-      // Send OTP to the user's email (using nodemailer)
-      const mailOptions = {
-        from: process.env.SMTP_USER,
-        to: email,
-        subject: "OTP Verification",
-        text: `Your OTP for registration is: ${otp}`
-      };
-  
-      transporter.sendMail(mailOptions, async (error, info) => {
-        if (error) {
-          console.error(error);
-          res.status(500).send({ success: false, error: "Internal Server Error" });
-        } else {
-          const newUser = new userModel({
-            name,
-            email,
-            password: encrypt,
-            confirmPassword: encrypt,
-            address,
-            gender,
-            contact,
-            avatar: {
-              public_id: "adbjhsbjhdcdc",
-              url: "cjsdnkjcdsc"
-            },
-            otp // Store OTP temporarily
-          });
-  
-          await newUser.save();
-          res.status(200).send({ success: true, user: newUser, otpSent: true });
-        }
+      const newUser = new userModel({
+        name,
+        email,
+        password: encrypt,
+        confirmPassword: encrypt,
+        address,
+        gender,
+        contact,
+        avatar: {
+          public_id: "adbjhsbjhdcdc",
+          url: "cjsdnkjcdsc",
+        },
+        otp, // Store OTP temporarily
       });
+  
+      await newUser.save();
+      res.status(200).send({ success: true, user: newUser, otpSent: true });
     } catch (error) {
+      if (error.name === 'ValidationError') {
+        // Handle Mongoose validation errors
+        const validationErrors = Object.values(error.errors).map((err) => err.message);
+        return res.status(400).send({ success: false, error: validationErrors });
+      }
+  
       console.log(error);
       res.status(500).send({ success: false, error: error.message });
     }
   };
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
   
 
 
