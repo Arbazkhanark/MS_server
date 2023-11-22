@@ -2,7 +2,10 @@ const express=require("express");
 const dbConnection = require("./database");
 const cookieParser=require("cookie-parser");
 const cors=require("cors");
+const path=require("path")
 require("dotenv").config();
+
+
 const userRouter=require("./routes/userRouter");
 const productRoutes=require("./routes/productRoutes");
 const orderRouter=require("./routes/orderRouter")
@@ -10,7 +13,6 @@ const couponRouter=require("./routes/couponRouter");
 const cartRouter=require("./routes/cartRouter");
 const adminRouter=require("./routes/adminRouter")
 
-const path=require("path")
 
 const app=express();
 app.use(express.static(path.resolve(__dirname,"dist")))
@@ -18,7 +20,7 @@ dbConnection();
 
 app.use(cors({
     credentials:true,
-    origin:["http://localhost:5173","http://localhost:5174", 'https://ms-server-six.vercel.app/']
+    origin:["http://localhost:5173","http://localhost:5174", 'https://ms-server-six.vercel.app']
 }));
 app.use(cookieParser());
 app.use(express.json());
