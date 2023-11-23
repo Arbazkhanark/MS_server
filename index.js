@@ -20,7 +20,7 @@ app.use(express.static(path.resolve(__dirname,"dist")))
 
 app.use(cors({
     credentials:true,
-    origin:["http://localhost:5173","http://localhost:5174", 'https://ms-server-six.vercel.app/']
+    origin:'*'
 }));
 app.use(cookieParser());
 app.use(express.json());
