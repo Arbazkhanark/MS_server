@@ -20,7 +20,7 @@ app.use(express.static(path.resolve(__dirname,"dist")))
 
 app.use(cors({
     credentials:true,
-    origin:'*'
+    origin:"http://localhost:5173"
 }));
 app.use(cookieParser());
 app.use(express.json());

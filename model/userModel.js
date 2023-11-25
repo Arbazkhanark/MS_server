@@ -73,6 +73,10 @@ const userSchema = new mongoose.Schema({
     type: Number, // Assuming OTP is a number
     // You may want to customize this based on your specific OTP implementation
   },
+  otpExpire: {
+    type: Date,
+    default: () => new Date(+new Date() + 5 * 60 * 1000), // Set the default expiry to 5 minutes from now
+  },
 
   verified: {
     type: Boolean,

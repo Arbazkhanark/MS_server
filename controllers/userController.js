@@ -16,103 +16,15 @@ const transporter=nodemailer.createTransport({
 })
 
 
-// const register=async(req,res)=>{
-//     const {name,email,password,confirmPassword,contact,address,gender}=req.body;
-//     try {
-//         const isEmailAlready=await userModel.findOne({email});
-//         if(isEmailAlready){
-//             return res.status(400).send({success:false,error:"User Already Exist"});
-//         }
-//         const encrypt=await bcrypt.hash(password,10);
-//         if(password!==confirmPassword){
-//             return res.status(400).send({success:false,error:"password and confirm password should be same"})
-//         }
-
-
-//         const newUser=new userModel({
-//             name,
-//             email,
-//             password:encrypt,
-//             confirmPassword:encrypt,
-//             address,
-//             gender,
-//             contact,
-//             avatar:{
-//                 public_id:"adbjhsbjhdcdc",
-//                 url:"cjsdnkjcdsc"
-//             }
-//         })
-//         const registeredUser= await newUser.save();
-//         res.status(200).send({success:true,user:registeredUser})
-//     } catch (error) {
-//         console.log(error);
-//         res.status(500).send({success:false,error:error.message})        
-//     }
-// }
-
   const generateOTP = () => {
     return Math.floor(1000 + Math.random() * 9000);
   };
   
-  
-//   const register = async (req, res) => {
-//     const { name, email, password, confirmPassword, contact, address, gender } = req.body;
-//     const otp = generateOTP(); // Generate OTP
-  
-//     try {
-//       const isEmailAlready = await userModel.findOne({ email });
-//       if (isEmailAlready) {
-//         return res.status(400).send({ success: false, error: "User Already Exist" });
-//       }
-  
-//       const encrypt = await bcrypt.hash(password, 10);
-//       if (password !== confirmPassword) {
-//         return res.status(400).send({ success: false, error: "password and confirm password should be same" });
-//       }
-  
-//       // Send OTP to the user's email (using nodemailer)
-//       const mailOptions = {
-//         from: process.env.SMTP_USER,
-//         to: email,
-//         subject: "OTP Verification",
-//         text: `Your OTP for registration is: ${otp}`
-//       };
-  
-//       transporter.sendMail(mailOptions, async (error, info) => {
-//         if (error) {
-//           console.error(error);
-//           res.status(500).send({ success: false, error: "Internal Server Error" });
-//         } else {
-//           const newUser = new userModel({
-//             name,
-//             email,
-//             password: encrypt,
-//             confirmPassword: encrypt,
-//             address,
-//             gender,
-//             contact,
-//             avatar: {
-//               public_id: "adbjhsbjhdcdc",
-//               url: "cjsdnkjcdsc"
-//             },
-//             otp // Store OTP temporarily
-//           });
-  
-//           await newUser.save();
-//           res.status(200).send({ success: true, user: newUser, otpSent: true });
-//         }
-//       });
-//     } catch (error) {
-//       console.log(error);
-//       res.status(500).send({ success: false, error: error.message });
-//     }
-//   };
-
-
 
 const register = async (req, res) => {
     const { name, email, password, confirmPassword, contact, address, gender } = req.body;
     const otp = generateOTP(); // Generate OTP
+    const otpExpire = new Date(+new Date() + 5 * 60 * 1000); // Set the OTP expiry to 5 minutes from now
   
     try {
       const isEmailAlready = await userModel.findOne({ email });
@@ -125,6 +37,7 @@ const register = async (req, res) => {
         return res.status(400).send({ success: false, error: "Password and Confirm Password should be the same" });
       }
   
+      
       const newUser = new userModel({
         name,
         email,
@@ -138,8 +51,27 @@ const register = async (req, res) => {
           url: "cjsdnkjcdsc",
         },
         otp, // Store OTP temporarily
+        otpExpire
       });
-  
+      const mailOptions = {
+        from: process.env.SMTP_USER,
+        to: email,
+        subject: "Account Verification",
+        text: `Dear User,
+      
+              Thank you for registering with our application. To verify your account, please use the following code:
+      
+              Verification Code: ${otp}
+      
+              If you did not register for an account, please ignore this email.
+      
+              Thank you for choosing our service.
+      
+              Regards,
+              Your Application Team`
+      };
+      
+      await transporter.sendMail(mailOptions)
       await newUser.save();
       res.status(200).send({ success: true, user: newUser, otpSent: true });
     } catch (error) {
@@ -157,47 +89,37 @@ const register = async (req, res) => {
 
 
 
-
-
-
-
-
-
-
-
-
-
-
+  
+  const verifyOTP = async (req, res) => {
+    const { email, otp } = req.body;
+  
+    try {
+      const user = await userModel.findOne({ email });
+  
+      if (!user) {
+        return res.status(400).send({ success: false, error: "User not found" });
+      }
+  
+      if (user.verified) {
+        return res.status(400).send({ success: false, error: "User already verified" });
+      }
+  
+      if (user.otp !== otp) {
+        return res.status(400).send({ success: false, error: "Invalid OTP" });
+      }
+  
+      // Update the verified field to true
+      user.verified = true;
+      await user.save();
+  
+      res.status(200).send({ success: true, message: "User registered and verified successfully" });
+    } catch (error) {
+      console.log(error);
+      res.status(500).send({ success: false, error: error.message });
+    }
+  };
   
 
-
- const verifyOTP = async (req, res) => {
-  const { email, otp } = req.body;
-
-  try {
-    const user = await userModel.findOne({ email });
-
-    if (!user) {
-      return res.status(400).send({ success: false, error: "User not found" });
-    }
-
-    if (user.verified) {
-      return res.status(400).send({ success: false, error: "User already verified" });
-    }
-
-    if (user.otp !== otp) {
-      return res.status(400).send({ success: false, error: "Invalid OTP" });
-    }
-
-    user.verified = true;
-    await user.save();
-
-    res.status(200).send({ success: true, message: "User registered and verified successfully" });
-  } catch (error) {
-    console.log(error);
-    res.status(500).send({ success: false, error: error.message });
-  }
-};
 
   
   
@@ -378,29 +300,37 @@ const getAllUser=async(req,res)=>{
 }
 
 
-const contactUs=async(req,res)=>{
-    const {name,email,phone,place,message}=req.body;
+const contactUs = async (req, res) => {
+    const { name, email, phone, place, message } = req.body;
+  
     try {
-        const user=await userModel.find({email});
-        console.log(user);
-        if(!user){
-            return res.status(400).send({success:false,error:"User is Not registered "});
-        }
-        const mailOptions={
-            from:email,
-            to:process.env.SMTP_USER,
-            subject:`Hey MuscleSharks:- A new message from ${name}`,
-            text:message
-        }
-
-        await transporter.sendMail(mailOptions);
-        res.status(200).send({success:true,message,message})
+      const user = await userModel.find({ email });
+      console.log(user);
+  
+      if (!user) {
+        return res.status(400).send({ success: false, error: "User is Not registered " });
+      }
+  
+      // Check if the message is empty or less than 10 characters
+      if (!message || message.length < 10) {
+        return res.status(400).send({ success: false, error: "Enter at least 10 letters in the message" });
+      }
+  
+      const mailOptions = {
+        from: email,
+        to: process.env.SMTP_USER,
+        subject: `Hey MuscleSharks: A new message from ${name}`,
+        text: message
+      };
+  
+      await transporter.sendMail(mailOptions);
+      res.status(200).send({ success: true, message: "Message sent successfully" });
     } catch (error) {
-        console.log(error);
-        res.status(500).send({success:false,error:error.message});
+      console.log(error);
+      res.status(500).send({ success: false, error: error.message });
     }
-}
-
+  };
+  
 
 
 
