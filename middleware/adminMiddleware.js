@@ -66,11 +66,6 @@ const verifyAdminToken=async(req,res,next)=>{
     // const token=req.headers.authorization.split(' ')[1];
     const token=req.cookies.adminToken;
     try {
-
-        if(token===undefined){
-            return res.status(400).send({success:false,error:"Token is Not in Cookie"})
-        }
-
         const verified=await jwt.verify(token,process.env.SECRET_KEY);
 
         if(verified){
